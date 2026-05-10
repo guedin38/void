@@ -1,0 +1,87 @@
+{
+  "name": "void",
+  "productName": "VOID",
+  "version": "1.0.0",
+  "description": "VOID - Lecteur Audio Indépendant (DLNA Renderer)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:all": "electron-builder --win --mac"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1",
+    "express": "^4.18.2",
+    "music-metadata": "^7.14.0",
+    "node-fetch": "^2.7.0",
+    "node-ssdp": "^4.0.1",
+    "uuid": "^9.0.0",
+    "ws": "^8.16.0",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "electron": "^41.4.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.void.player",
+    "productName": "VOID",
+    "copyright": "Copyright © 2025 VOID",
+    "files": [
+      "main.js",
+      "server.js",
+      "preload.js",
+      "node-fetch-native-shim.js",
+      "public/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.music",
+      "darkModeSupport": true,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        },
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    },
+    "dmg": {
+      "title": "VOID ${version}",
+      "backgroundColor": "#0a0612",
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

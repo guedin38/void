@@ -1,0 +1,98 @@
+name: Build VOID — Windows & macOS
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  #  macOS build → .dmg (x64 + arm64)
+  # ─────────────────────────────────────────────────────────────────
+  build-mac:
+    name: 🍎 macOS (dmg + zip)
+    runs-on: macos-14          # Apple Silicon runner (builds both arches)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS (dmg + zip, x64 + arm64)
+        run: npm run build:mac
+        env:
+          # No code signing — community build
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          ELECTRON_BUILDER_SKIP_NOTARIZATION: true
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: VOID-macOS
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/mac*/**/*.dmg
+            dist/mac*/**/*.zip
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────────
+  #  Windows build → .zip + NSIS installer
+  # ─────────────────────────────────────────────────────────────────
+  build-win:
+    name: 🪟 Windows (zip + installer)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows (zip + NSIS)
+        run: npm run build:win
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: VOID-Windows
+          path: |
+            dist/*.zip
+            dist/*.exe
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────────
+  #  Summary — links to all downloadable artifacts
+  # ─────────────────────────────────────────────────────────────────
+  summary:
+    name: 📦 Build summary
+    needs: [build-mac, build-win]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Write job summary
+        run: |
+          echo "## VOID Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🍎 macOS (dmg + zip) | ${{ needs.build-mac.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🪟 Windows (zip + exe) | ${{ needs.build-win.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "➡️  Download artifacts from the **Actions > [this run] > Artifacts** section." >> $GITHUB_STEP_SUMMARY
